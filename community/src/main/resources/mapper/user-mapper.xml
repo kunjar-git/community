@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--映射到指定的dao的mapper文件-->
+<mapper namespace="com.nowcoder.community.dao.UserMapper">
+    <sql id = "selectFields">
+        id, username, password, salt, email, type, status, activation_code, header_url, create_time
+    </sql>
+    <sql id = "insertFields1">
+        username, password, salt, email, type, status, activation_code, header_url, create_time
+    </sql>
+    <sql id = "insertFields2">
+        #{username}, #{password}, #{salt}, #{email}, #{type}, #{status}, #{activationCode}
+        , #{headerUrl}, #{createTime}
+    </sql>
+    <select id="selectById" parameterType="int" resultType="User">
+        SELECT <include refid="selectFields"></include>
+        FROM user
+        WHERE id = #{id}
+    </select>
+    <select id="selectByName" parameterType="String" resultType="User">
+        SELECT <include refid="selectFields"></include>
+        FROM user
+        WHERE username = #{username}
+    </select>
+    <select id="selectByEmail" parameterType="String" resultType="User">
+        SELECT <include refid="selectFields"></include>
+        FROM user
+        WHERE email = #{email}
+    </select>
+
+<!--   增加的时侯需要parameterType（这是自己构造的bean，需要告诉编译器要找谁的参数）、keyProperty-->
+    <insert id="insertUser" parameterType="User" keyProperty="id">
+        INSERT into user(<include refid="insertFields1"></include>) values(<include refid="insertFields2"></include>)
+    </insert>
+    <update id="updateStatus">
+        UPDATE user SET status = #{status} where id = #{id}
+    </update>
+    <update id="updateHeader">
+        UPDATE user SET header_url = #{headerUrl} where id = #{id}
+    </update>
+    <update id="updatePassword">
+        UPDATE user SET password = #{password} where id = #{id}
+    </update>
+</mapper>
