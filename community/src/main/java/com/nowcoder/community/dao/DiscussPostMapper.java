@@ -14,4 +14,10 @@ public interface DiscussPostMapper {
     // @Param：给参数起别名
     // 如果需要动态拼条件且只有一个参数，那么必须用的
     int selectDiscussPostRows(@Param("userId") int userId);
+
+    int insertDiscussPost(DiscussPost discussPost);
+
+    DiscussPost selectDiscussPostById(int id);
+
+    int updateCommentCount(int id, int commentCount);
 }
