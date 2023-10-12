@@ -30,7 +30,7 @@
         WHERE email = #{email}
     </select>
 
-<!--   增加的时侯需要parameterType（这是自己构造的bean，需要告诉编译器要找谁的参数）、keyProperty-->
+<!--   增加的时侯需要parameterType（这是自己构造的bean，需要告诉编译器要找谁的参数）、keyProperty(自增的，要说明一下)-->
     <insert id="insertUser" parameterType="User" keyProperty="id">
         INSERT into user(<include refid="insertFields1"></include>) values(<include refid="insertFields2"></include>)
     </insert>
