@@ -45,6 +45,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements Comm
                         AUTHORITY_ADMIN,
                         AUTHORITY_MODERATOR
                 )
+                .antMatchers(
+                        "/discuss/top",
+                        "/discuss/wonderful"
+                )
+                .hasAnyAuthority(
+                        AUTHORITY_MODERATOR
+                )
+                .antMatchers(
+                        "/discuss/delete",
+                        "/data/**",
+                        "/actuator/**"
+                )
+                .hasAnyAuthority(
+                        AUTHORITY_ADMIN
+                )
                 .anyRequest().permitAll()
                 .and().csrf().disable();
 
@@ -59,6 +74,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements Comm
                             response.setContentType("application/plain;charset=utf-8");
                             PrintWriter writer = response.getWriter();
                             writer.write(CommunityUtil.getJSONString(403, "你还没有登录哦!"));
+                            // TODO 重定向？
                         } else {
                             response.sendRedirect(request.getContextPath() + "/login");
                         }

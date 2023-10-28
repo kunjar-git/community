@@ -41,7 +41,8 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
                 User user = userService.findUserById(loginTicket.getUserId());
                 // 在本次请求中持有用户,只要请求在，线程就活着，所以可以放入ThreadLocal里
                 hostHolder.setUser(user);
-                // 构建用户认证的结果,并存入SecurityContext,以便于Security进行授权.
+                // 构建用户认证的结果,并存入SecurityContext,存储用户的账号密码和身份（普通用户、版主、管理员，与user.type字段有关）
+                // 以便于Security进行授权.
                 Authentication authentication = new UsernamePasswordAuthenticationToken(
                         user, user.getPassword(), userService.getAuthorities(user.getId()));
                 SecurityContextHolder.setContext(new SecurityContextImpl(authentication));
