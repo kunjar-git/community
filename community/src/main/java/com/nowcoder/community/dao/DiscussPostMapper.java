@@ -15,6 +15,8 @@ public interface DiscussPostMapper {
     // 如果需要动态拼条件且只有一个参数，那么必须用的
     int selectDiscussPostRows(@Param("userId") int userId);
 
+    List<Integer> selectUniqueUserIdCount();
+
     int insertDiscussPost(DiscussPost discussPost);
 
     DiscussPost selectDiscussPostById(int id);

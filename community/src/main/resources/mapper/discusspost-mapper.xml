@@ -36,6 +36,11 @@
             and user_id = #{userId}
         </if>
     </select>
+    <select id="selectUniqueUserIdCount" resultType="Integer">
+        select distinct(user_id)
+        from discuss_post
+        where status != 2
+    </select>
     <insert id="insertDiscussPost" parameterType="DiscussPost" keyProperty="id">
         insert into discuss_post(<include refid="insertFields1"></include>)
         values(<include refid="insertFields2"></include>)

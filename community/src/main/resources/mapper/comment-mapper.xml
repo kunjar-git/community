@@ -16,7 +16,17 @@
         where status = 0
         and entity_type = #{entityType}
         and entity_id = #{entityId}
-        order by create_time asc
+        order by create_time desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="selectCommentsByUserId" resultType="Comment">
+        select <include refid="selectFields"></include>
+        from comment
+        where status = 0
+        and entity_type = #{entityType}
+        and user_id = #{userId}
+        order by create_time desc
         limit #{offset}, #{limit}
     </select>
 
@@ -27,6 +37,14 @@
         and entity_type = #{entityType}
         and entity_id = #{entityId}
     </select>
+    <select id="selectCommentsCountByUserId" resultType="int">
+        select count(id)
+        from comment
+        where status = 0
+        and entity_type = #{entityType}
+        and user_id = #{userId}
+    </select>
+
     <insert id="insertComment" parameterType="Comment">
         insert into comment(<include refid="insertFields"></include>)
         values(#{userId}, #{entityType}, #{entityId}, #{targetId}, #{content}, #{status}, #{createTime})

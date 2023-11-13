@@ -42,7 +42,7 @@ public class PostScoreRefreshJob implements Job, CommunityConstant {
         try {
             epoch = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2014-08-01 00:00:00");
         } catch (ParseException e) {
-            throw new RuntimeException("初始化牛客纪元失败!", e);
+            throw new RuntimeException("初始化「SHK社交论坛」纪元失败!", e);
         }
     }
 

@@ -1,9 +1,13 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8">
-    <link rel="icon" href="https://static.nowcoder.com/images/logo_87_87.png"/>
-    <title>牛客网-激活账号</title>
+<!--    <meta charset="utf-8">-->
+<!--	<link rel="icon" th:href="@{/img/head.png}"/>-->
+<!--    <title>牛客网-激活账号</title>-->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="../img/head.png"/>
+	<title>SHK社交平台-激活账号</title>
 </head>
 <body>
 	<div>
@@ -11,9 +15,9 @@
 			<b th:text="${email}">xxx@xxx.com</b>, 您好!
 		</p>
 		<p>
-			您正在注册牛客网, 这是一封激活邮件, 请点击 
+			您正在注册SHK社交平台, 这是一封激活邮件, 请点击
 			<a th:href="${url}">here</a>,
-			激活您的牛客账号!
+			激活您的「SHK社交平台」账号!
 		</p>
 	</div>
 </body>
