@@ -1,10 +1,11 @@
 package com.nowcoder.community.controller;
 
 import com.nowcoder.community.annotation.LoginRequired;
+import com.nowcoder.community.entity.Comment;
+import com.nowcoder.community.entity.DiscussPost;
+import com.nowcoder.community.entity.Page;
 import com.nowcoder.community.entity.User;
-import com.nowcoder.community.service.FollowService;
-import com.nowcoder.community.service.LikeService;
-import com.nowcoder.community.service.UserService;
+import com.nowcoder.community.service.*;
 import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
 import com.nowcoder.community.util.HostHolder;
@@ -25,6 +26,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/user")
@@ -53,6 +58,11 @@ public class UserController implements CommunityConstant {
     @Autowired
     FollowService followService;
 
+    @Autowired
+    CommentService commentService;
+
+    @Autowired
+    private DiscussPostService discussPostService;
     @Value("${qiniu.key.access}")
     private String accessKey;
 
@@ -220,4 +230,59 @@ public class UserController implements CommunityConstant {
         return "/site/profile";
     }
 
+    // 我的帖子
+    @RequestMapping(path = "/post/{userId}", method = RequestMethod.GET)
+    public String getMyPost(@PathVariable("userId") int userId, Model model, Page page) {
+        // 方法调用前,SpringMVC会自动实例化Model和Page,并将Page注入Model.
+        // 所以,在thymeleaf中可以直接访问Page对象中的数据.
+
+        page.setRows(discussPostService.findDiscussPostRows(userId));
+        page.setPath("/user/post/" + userId);
+        page.setLimit(5);
+        List<DiscussPost> list = discussPostService.findDiscussPosts(userId, page.getOffset(), page.getLimit(), 0);
+        List<Map<String, Object>> discussPosts = new ArrayList<>();
+        int totalMyPostCount = page.getRows();
+        if (list != null) {
+            for (DiscussPost post : list) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("post", post);
+//                User user = userService.findUserById(post.getUserId());
+//                map.put("user", user);
+
+                long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, post.getId());
+//                totalLikeCount += likeCount;
+                map.put("likeCount", likeCount);
+                discussPosts.add(map);
+            }
+        }
+        model.addAttribute("discussPosts", discussPosts);
+        model.addAttribute("totalMyPostCount", totalMyPostCount);
+        return "/site/my-post";
+    }
+    @RequestMapping(path = "/reply/{userId}", method = RequestMethod.GET)
+    public String getMyReply(@PathVariable("userId") int userId, Model model, Page page) {
+        // 查询某用户回复的帖子的数目
+        page.setRows(commentService.findCommentsCountByUserId(userId, ENTITY_TYPE_POST));
+        page.setPath("/user/reply/" + userId);
+        page.setLimit(5);
+        List<Comment> list = commentService.findCommentsByUserId(userId, ENTITY_TYPE_POST, page.getOffset(), page.getLimit());
+        List<Map<String, Object>> commentPosts = new ArrayList<>();
+        int totalReplyCount = page.getRows();
+        if (list != null) {
+            for (Comment comment : list) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("comment", comment);
+//                User user = userService.findUserById(post.getUserId());
+//                map.put("user", user);
+
+                DiscussPost post = discussPostService.findDiscussPostById(comment.getEntityId());
+//                totalLikeCount += likeCount;
+                map.put("post", post);
+                commentPosts.add(map);
+            }
+        }
+        model.addAttribute("commentPosts", commentPosts);
+        model.addAttribute("totalReplyCount", totalReplyCount);
+        return "/site/my-reply";
+    }
 }

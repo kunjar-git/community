@@ -32,6 +32,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements Comm
                 .antMatchers(
                         "/user/setting",
                         "/user/upload",
+                        "/user/profile/**",
+                        "/user/post/**",
+                        "/user/reply/**",
                         "/discuss/add",
                         "/comment/add/**",
                         "/letter/**",
@@ -53,6 +56,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements Comm
                         AUTHORITY_MODERATOR
                 )
                 .antMatchers(
+                        "/discuss/top",
+                        "/discuss/wonderful",
                         "/discuss/delete",
                         "/data/**",
                         "/actuator/**"

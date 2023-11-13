@@ -18,6 +18,8 @@ import org.springframework.ui.Model;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -170,6 +172,77 @@ public class UserService implements CommunityConstant {
         String redisKey = RedisKeyUtil.getTicketKey(loginTicket.getTicket());
         redisTemplate.opsForValue().set(redisKey, loginTicket);
         map.put("ticket", loginTicket.getTicket());
+        return map;
+    }
+
+    //忘记密码之后给邮箱发送验证码
+    public Map<String, Object> getCode(String email) {
+        Map<String,Object> map = new HashMap<>();
+        //空值判断
+        if (StringUtils.isBlank(email)){
+            map.put("emailMsg","请输入邮箱！");
+            return map;
+        }
+        //邮箱是否正确
+        User user = userMapper.selectByEmail(email);
+        if (user == null){
+            map.put("emailMsg","该邮箱还未注册过，请注册后再使用！");
+            return map;
+        }
+        //该用户还未激活
+        if (user.getStatus() == 0){
+            map.put("emailMsg","该邮箱还未激活，请到邮箱中激活后再使用！");
+            return map;
+        }
+        //邮箱正确的情况下，发送验证码到邮箱
+        Context context = new Context();
+        context.setVariable("email",email);
+        String code = CommunityUtil.generateUUID().substring(0,6).toUpperCase();
+        context.setVariable("code",code);
+        String content = templateEngine.process("mail/forget", context);
+        mailClientUtil.sendMail(email, "SHK社交平台验证码", content);
+
+        map.put("code",code);//map中存放一份，为了之后和用户输入的验证码进行对比
+        map.put("expirationTime", LocalDateTime.now().plusMinutes(5L));//过期时间
+        return map;
+    }
+    //忘记密码
+
+    public Map<String, Object> forget(String email, String verifycode, String password){
+        Map<String,Object> map = new HashMap<>();
+        //空值处理
+        if (StringUtils.isBlank(email)){
+            map.put("emailMsg", "请输入邮箱！");
+            return map;
+        }
+        if (StringUtils.isBlank(verifycode)){
+            map.put("codeMsg", "请输入验证码！");
+            return map;
+        }
+        if (StringUtils.isBlank(password)){
+            map.put("passwordMsg", "请输入新密码！");
+            return map;
+        }
+        //空值判断
+        if (StringUtils.isBlank(email)){
+            map.put("emailMsg","请输入邮箱！");
+            return map;
+        }
+        //邮箱是否正确
+        User user = userMapper.selectByEmail(email);
+        if (user == null){
+            map.put("emailMsg","该邮箱还未注册过，请注册后再使用！");
+            return map;
+        }
+        //该用户还未激活
+        if (user.getStatus() == 0){
+            map.put("emailMsg","该邮箱还未激活，请到邮箱中激活后再使用！");
+            return map;
+        }
+//        //邮箱在获取验证码那一步已经验证过了，是有效的邮箱，且验证码也有效
+//        User user = userMapper.selectByEmail(email);
+        password = CommunityUtil.generateMD5(password + user.getSalt());
+        userMapper.updatePassword(user.getId(), password);
         return map;
     }
 

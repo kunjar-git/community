@@ -91,6 +91,9 @@ public class DiscussPostService {
         logger.debug("load post list from DB.");
         return discussPostMapper.selectDiscussPosts(userId, offset, limit, orderMode);
     }
+    public List<Integer> findUniqueUserIdCount() {
+        return discussPostMapper.selectUniqueUserIdCount();
+    }
     public int findDiscussPostRows(int userId)  {
         if (userId == 0) {
             return postRowsCache.get(userId);

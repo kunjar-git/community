@@ -5,6 +5,7 @@ import com.nowcoder.community.entity.User;
 import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
+import com.nowcoder.community.util.HostHolder;
 import com.nowcoder.community.util.RedisKeyUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.imageio.ImageIO;
@@ -26,6 +24,7 @@ import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -36,6 +35,8 @@ public class LoginController implements CommunityConstant {
     private UserService userService;
     @Autowired
     private Producer kaptchaProducer;
+    @Autowired
+    private HostHolder hostHolder;
     @Autowired
     RedisTemplate redisTemplate;
     @Value("${server.servlet.context-path}")
@@ -49,7 +50,15 @@ public class LoginController implements CommunityConstant {
         return "/site/login";
     }
     @PostMapping("/register")
-    public String register(Model model, User user) {
+    public String register(Model model, String username, String password, String confirmPassword, String email) {
+        if (!StringUtils.equals(password, confirmPassword)) {
+            model.addAttribute("confirmPasswordMsg", "确认密码与新密码不一致！");
+//            return "/site/register";
+        }
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(password);
+        user.setUsername(username);
         Map<String, Object> map = userService.register(user);
         if (map == null || map.isEmpty()) {
             model.addAttribute("msg", "注册成功，我们已经向您的邮箱发送了一封激活邮件,请尽快激活！");
@@ -138,6 +147,64 @@ public class LoginController implements CommunityConstant {
             model.addAttribute("passwordMsg", map.get("passwordMsg"));
             return "/site/login";
         }
+    }
+    @RequestMapping(path = "/forget", method = RequestMethod.GET)
+    public String getForgetPage(Model model) {
+        if (hostHolder.getUser() != null) {
+            return "/denied";
+        }
+        return "site/forget";
+    }
+    //忘记密码
+    @RequestMapping(path = "/forget", method = RequestMethod.POST)
+    public String forget(Model model, String email, String verifycode, String password, HttpSession session) {
+        if (hostHolder.getUser() != null) {
+            return "/denied";
+        }
+        if (session.getAttribute("code") == null) {
+            model.addAttribute("codeMsg", "请先获取验证码！");
+            return "site/forget";
+        }
+        //验证验证码是否正确
+        if (!verifycode.equals(session.getAttribute("code"))) {
+            model.addAttribute("codeMsg", "输入的验证码不正确！");
+            return "site/forget";
+        }
+        //验证码是否过期
+        if (LocalDateTime.now().isAfter((LocalDateTime) session.getAttribute("expirationTime"))) {
+            model.addAttribute("codeMsg", "输入的验证码已过期，请重新获取验证码！");
+//            model.addAttribute("expireMsg", null);
+            return "site/forget";
+        }
+        Map<String, Object> map = userService.forget(email, verifycode, password);
+        if (map == null || map.isEmpty()) {
+            model.addAttribute("msg", "密码修改成功，可以使用新密码登录了!");
+            model.addAttribute("target", "/login");
+            return "site/operate-result";
+        } else {
+            model.addAttribute("emailMsg", map.get("emailMsg"));
+            model.addAttribute("codeMsg", map.get("codeMsg"));
+            model.addAttribute("passwordMsg", map.get("passwordMsg"));
+            return "/site/forget";
+        }
+    }
+
+    //忘记密码之后获取验证码
+    @RequestMapping(path = "/getCode", method = RequestMethod.GET)
+    public String getCode(String email, Model model, HttpSession session) {
+        Map<String, Object> map = userService.getCode(email);
+        System.out.println("this is email:" + email);
+        if (map.containsKey("emailMsg")) {//有错误的情况下
+            model.addAttribute("emailMsg", map.get("emailMsg"));
+        } else {//正确的情况下，向邮箱发送了验证码
+            model.addAttribute("msg", "验证码已经发送到您的邮箱，5分钟内有效！");
+            //将验证码存放在 session 中，后序和用户输入的信息进行比较
+            session.setAttribute("code",map.get("code"));
+            //后序判断用户输入验证码的时候验证码是否已经过期
+            session.setAttribute("expirationTime",map.get("expirationTime"));
+        }
+//        model.addAttribute("expireMsg", "已经有验证码！");
+        return "site/forget";
     }
 
     @GetMapping("/logout")

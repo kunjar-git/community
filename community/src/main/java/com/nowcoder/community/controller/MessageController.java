@@ -9,6 +9,7 @@ import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
 import com.nowcoder.community.util.HostHolder;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -123,6 +124,12 @@ public class MessageController implements CommunityConstant {
     @PostMapping(path = "/letter/send")
     @ResponseBody
     public String sendLetter(String toName, String content) {
+        if (toName == null || StringUtils.isEmpty(toName)) {
+            return CommunityUtil.getJSONString(1, "目标用户不能为空！");
+        }
+        if (content == null || StringUtils.isEmpty(content)) {
+            return CommunityUtil.getJSONString(1, "发送内容不能为空！");
+        }
         User target = userService.findUserByName(toName);
         if (target == null) {
             return CommunityUtil.getJSONString(1, "目标用户不存在！");

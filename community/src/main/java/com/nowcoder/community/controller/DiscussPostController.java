@@ -50,7 +50,12 @@ public class DiscussPostController implements CommunityConstant {
         if (user == null) {
             return CommunityUtil.getJSONString(403, "你还没有登录哦!");
         }
-
+        if (title == null || title.isEmpty()) {
+            return CommunityUtil.getJSONString(403, "标题不能为空");
+        }
+        if (content == null || content.isEmpty()) {
+            return CommunityUtil.getJSONString(403, "内容不能为空");
+        }
         DiscussPost post = new DiscussPost();
         // 其余属性为默认值
         post.setUserId(user.getId());
